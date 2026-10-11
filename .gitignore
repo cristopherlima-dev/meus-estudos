@@ -1,0 +1,9 @@
+# Arquivos gerados pelo Claude (não versionar)
+Claude outputs/
+
+# Configurações locais do editor
+.vscode/
+
+# Sistema
+Thumbs.db
+Desktop.ini
