@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3f51b5">
+  <title>Meus Estudos</title>
+
+  <!-- PWA: manifesto e ícones (arquivos criados nas próximas etapas) -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       LOGIN (aparece só quando não há usuário logado)
+       Mesmo login dos outros apps (projeto meus-apps)
+       ========================================================= -->
+  <section id="tela-login" class="login" hidden>
+    <div class="login-logo">📚</div>
+    <h1>Meus Estudos</h1>
+
+    <form id="form-login" autocomplete="on">
+      <label for="login-email">E-mail</label>
+      <input id="login-email" type="email" autocomplete="username" required>
+
+      <label for="login-senha">Senha</label>
+      <input id="login-senha" type="password" autocomplete="current-password" required>
+
+      <button type="submit" class="btn btn-primario">Entrar</button>
+      <p id="login-erro" class="erro" hidden></p>
+    </form>
+  </section>
+
+
+  <!-- =========================================================
+       APLICATIVO (aparece depois do login)
+       ========================================================= -->
+  <div id="app" hidden>
+
+    <header class="topo">
+      <button id="btn-voltar" type="button" class="topo-btn" hidden>‹ Voltar</button>
+      <h1 id="topo-titulo">Meus Estudos</h1>
+      <button id="btn-sair" type="button" class="topo-btn">Sair</button>
+    </header>
+
+    <main>
+
+      <!-- ---------------- INÍCIO ---------------- -->
+      <section id="tela-inicio" class="tela">
+
+        <!-- Primeiro acesso: ainda não há disciplinas -->
+        <div id="inicio-vazio" class="vazio-grande" hidden>
+          <p>Cadastre a primeira disciplina para começar a acompanhar suas aulas e avaliações.</p>
+          <button id="btn-primeira" type="button" class="btn btn-primario">+ Nova disciplina</button>
+        </div>
+
+        <div id="inicio-conteudo" hidden>
+          <!-- Fase mais recente: título, período e progresso -->
+          <div class="card resumo">
+            <small id="fase-curso">TADS · Uninter</small>
+            <h2 id="fase-titulo">—</h2>
+            <small id="fase-periodo"></small>
+            <div class="progresso-linha">
+              <span>Progresso da fase</span>
+              <b id="fase-pct">0%</b>
+            </div>
+            <div class="barra"><i id="fase-barra"></i></div>
+            <small id="fase-itens"></small>
+          </div>
+
+          <div class="card">
+            <h3>Próximos prazos</h3>
+            <div id="inicio-prazos"></div>
+            <p id="inicio-prazos-vazio" class="vazio-peq" hidden>Nenhum prazo nos próximos dias.</p>
+          </div>
+
+          <div class="card">
+            <h3>Disciplinas</h3>
+            <div id="inicio-disciplinas"></div>
+          </div>
+
+          <!-- Disciplinas de fases anteriores que ainda não foram aprovadas -->
+          <div id="card-pendentes" class="card" hidden>
+            <h3>Pendentes de fases anteriores</h3>
+            <div id="inicio-pendentes"></div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ---------------- PRAZOS ---------------- -->
+      <section id="tela-prazos" class="tela" hidden>
+        <div class="card">
+          <h3>Avaliações em aberto</h3>
+          <div id="lista-prazos"></div>
+          <p id="lista-prazos-vazia" class="vazio-peq" hidden>Nenhuma avaliação com prazo pela frente.</p>
+        </div>
+      </section>
+
+
+      <!-- ---------------- DISCIPLINA ---------------- -->
+      <section id="tela-disciplina" class="tela" hidden>
+        <div class="disc-cab">
+          <h2 id="disc-nome">—</h2>
+          <small id="disc-info"></small>
+        </div>
+
+        <div class="segmento" role="tablist" aria-label="Seção da disciplina">
+          <label><input type="radio" name="disc-aba" value="aulas" checked><span>Aulas</span></label>
+          <label><input type="radio" name="disc-aba" value="avaliacoes"><span>Avaliações</span></label>
+        </div>
+
+        <!-- Aba Aulas -->
+        <div id="painel-aulas">
+          <div class="card">
+            <div id="lista-aulas"></div>
+            <button id="btn-nova-aula" type="button" class="link">+ Adicionar aula</button>
+          </div>
+          <p class="rodape">APOL 1 cobre as aulas 1 a 3 · APOL 2 cobre as aulas 4 a 6</p>
+        </div>
+
+        <!-- Aba Avaliações -->
+        <div id="painel-avaliacoes" hidden>
+          <div id="lista-avaliacoes"></div>
+          <!-- Média / nota necessária (calculada pelo app.js) -->
+          <div id="calc-nota" class="calc"></div>
+          <!-- Botões para abrir 2ª chamada, Exame ou Recuperação (aparecem se reprovar) -->
+          <div id="chances"></div>
+          <p class="rodape">Para passar: média 70.</p>
+        </div>
+
+        <button id="btn-editar-disc" type="button" class="btn btn-secundario">Editar disciplina</button>
+      </section>
+
+
+      <!-- ---------------- AULA (checklist) ---------------- -->
+      <section id="tela-aula" class="tela" hidden>
+        <label for="aula-titulo">Título da aula (opcional)</label>
+        <input id="aula-titulo" type="text" maxlength="120" autocomplete="off"
+               placeholder="Ex.: Processos de negócio e notação BPMN">
+
+        <div class="card resumo" id="aula-resumo">
+          <div class="progresso-linha">
+            <span>Progresso da aula</span>
+            <b id="aula-pct">0%</b>
+          </div>
+          <div class="barra"><i id="aula-barra"></i></div>
+        </div>
+
+        <!-- Aula ainda sem itens -->
+        <div id="aula-vazia" class="vazio-grande" hidden>
+          <p>Esta aula ainda não tem itens.</p>
+          <button id="btn-copiar" type="button" class="btn btn-primario">Copiar itens da aula anterior</button>
+          <p class="rodape">Copia os grupos e os nomes, todos desmarcados.</p>
+        </div>
+
+        <!-- Itens agrupados (montados pelo app.js) -->
+        <div id="lista-itens"></div>
+
+        <!-- Adicionar item -->
+        <form id="form-item" class="card" novalidate>
+          <h3>Adicionar item</h3>
+          <label for="item-grupo">Grupo</label>
+          <select id="item-grupo">
+            <option value="teoria_video">Aula teórica · Vídeos</option>
+            <option value="teoria_texto">Aula teórica · Texto</option>
+            <option value="pratica">Aula prática</option>
+            <option value="complementar">Material complementar</option>
+          </select>
+          <label for="item-titulo">Nome</label>
+          <input id="item-titulo" type="text" maxlength="120" autocomplete="off"
+                 placeholder="Ex.: Tema 1 · O que são processos de negócio">
+          <p id="item-erro" class="erro" hidden></p>
+          <button type="submit" class="btn btn-primario">Adicionar</button>
+        </form>
+
+        <button id="btn-excluir-aula" type="button" class="btn btn-perigo">Excluir aula</button>
+      </section>
+
+
+      <!-- ---------------- AVALIAÇÃO (editar datas e nota) ---------------- -->
+      <section id="tela-avaliacao" class="tela" hidden>
+        <form id="form-aval" novalidate>
+          <input id="aval-id" type="hidden">
+          <p id="aval-desc" class="rodape"></p>
+
+          <div class="duas">
+            <div>
+              <label for="aval-inicio">Abre em</label>
+              <input id="aval-inicio" type="date">
+            </div>
+            <div>
+              <label for="aval-fim">Fecha em</label>
+              <input id="aval-fim" type="date">
+            </div>
+          </div>
+
+          <!-- Só para provas presenciais -->
+          <div id="aval-agendada-box">
+            <label for="aval-agendada">Agendada para</label>
+            <input id="aval-agendada" type="date">
+          </div>
+
+          <!-- Nota (APOLs e provas) -->
+          <div id="aval-nota-box">
+            <label for="aval-nota">Nota (0 a 100)</label>
+            <input id="aval-nota" type="text" inputmode="decimal" autocomplete="off" placeholder="Ainda não fez">
+          </div>
+
+          <!-- Só para trabalho -->
+          <label id="aval-entregue-box" class="check">
+            <input id="aval-entregue" type="checkbox">
+            <span>Trabalho entregue</span>
+          </label>
+
+          <p id="aval-erro" class="erro" hidden></p>
+
+          <button type="submit" class="btn btn-primario">Salvar</button>
+          <button id="btn-excluir-aval" type="button" class="btn btn-perigo" hidden>Remover avaliação</button>
+          <button id="btn-cancelar-aval" type="button" class="btn btn-secundario">Cancelar</button>
+        </form>
+      </section>
+
+
+      <!-- ---------------- NOVA / EDITAR DISCIPLINA ---------------- -->
+      <section id="tela-form-disc" class="tela" hidden>
+        <form id="form-disc" novalidate>
+          <input id="disc-id" type="hidden">
+
+          <label for="disc-f-nome">Nome</label>
+          <input id="disc-f-nome" type="text" maxlength="100" autocomplete="off" required>
+
+          <div class="duas">
+            <div>
+              <label for="disc-f-codigo">Código</label>
+              <input id="disc-f-codigo" type="text" maxlength="20" inputmode="numeric" autocomplete="off">
+            </div>
+            <div id="disc-f-aulas-box">
+              <label for="disc-f-aulas">Nº de aulas</label>
+              <input id="disc-f-aulas" type="number" min="6" max="50" value="6">
+            </div>
+          </div>
+
+          <div class="tres">
+            <div>
+              <label for="disc-f-modulo">Módulo</label>
+              <select id="disc-f-modulo">
+                <option>A</option><option>B</option><option>C</option><option selected>D</option>
+                <option>E</option><option>F</option><option>G</option><option>H</option>
+              </select>
+            </div>
+            <div>
+              <label for="disc-f-fase">Fase</label>
+              <select id="disc-f-fase">
+                <option selected>I</option><option>II</option>
+              </select>
+            </div>
+            <div>
+              <label for="disc-f-ano">Ano</label>
+              <input id="disc-f-ano" type="number" min="2020" max="2100">
+            </div>
+          </div>
+
+          <div class="duas">
+            <div>
+              <label for="disc-f-inicio">Início</label>
+              <input id="disc-f-inicio" type="date">
+            </div>
+            <div>
+              <label for="disc-f-fim">Fim</label>
+              <input id="disc-f-fim" type="date">
+            </div>
+          </div>
+
+          <label class="check">
+            <input id="disc-f-trabalho" type="checkbox">
+            <span>Tem trabalho para entregar</span>
+          </label>
+
+          <p id="disc-f-dica" class="rodape">Ao salvar, o app cria as aulas e as avaliações (APOL 1, APOL 2 e Prova Mista).</p>
+          <p id="disc-f-erro" class="erro" hidden></p>
+
+          <button type="submit" class="btn btn-primario">Salvar disciplina</button>
+          <button id="btn-excluir-disc" type="button" class="btn btn-perigo" hidden>Excluir disciplina</button>
+          <button id="btn-cancelar-disc" type="button" class="btn btn-secundario">Cancelar</button>
+        </form>
+      </section>
+
+    </main>
+
+    <!-- Menu inferior -->
+    <nav class="menu">
+      <button type="button" data-tela="inicio" class="ativo"><i>🏠</i>Início</button>
+      <button type="button" data-tela="prazos"><i>⏰</i>Prazos</button>
+      <button type="button" data-tela="form-disc"><i>➕</i>Nova disciplina</button>
+    </nav>
+  </div>
+
+  <!-- Janela de confirmação (substitui o confirm() do navegador) -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-msg">
+      <p id="modal-msg"></p>
+      <div class="modal-botoes">
+        <button id="modal-cancelar" type="button" class="btn btn-secundario">Cancelar</button>
+        <button id="modal-ok" type="button" class="btn btn-primario">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aviso rápido no rodapé (ex.: "Salvo!") -->
+  <div id="aviso" class="aviso" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
