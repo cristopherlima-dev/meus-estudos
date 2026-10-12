@@ -345,7 +345,12 @@ input:disabled { background: #f8fafc; color: var(--suave); }
 .ck input { width: 20px; height: 20px; accent-color: var(--ok); flex: none; cursor: pointer; }
 .ck span { flex: 1; min-width: 0; cursor: pointer; }
 .ck input:checked + span { color: var(--suave); text-decoration: line-through; }
-.ck .apagar { color: var(--suave); font-size: 18px; padding: 0 4px; flex: none; }
+.ck .apagar, .ck .editar { color: var(--suave); font-size: 18px; padding: 0 4px; flex: none; }
+.ck .editar { font-size: 16px; }
+
+/* Aula ao vivo: linha com caixa de marcar + texto que abre a edição */
+.ck .aovivo-tx { display: flex; flex-direction: column; gap: 2px; }
+.ck .aovivo-tx small { color: var(--suave); font-size: 12px; text-decoration: none; }
 
 /* ---------- 13. Janela de confirmação (modal) ---------- */
 .modal {
@@ -366,6 +371,7 @@ input:disabled { background: #f8fafc; color: var(--suave); }
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 .modal-caixa p { font-size: 16px; line-height: 1.4; }
+.modal-caixa input { margin-top: 12px; }
 .modal-botoes { display: flex; gap: 8px; margin-top: 18px; }
 .modal-botoes .btn { margin-top: 0; }
 .modal-botoes .btn-secundario { background: #f1f5f9; color: var(--texto); }

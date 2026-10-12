@@ -112,6 +112,8 @@
         <div class="segmento" role="tablist" aria-label="Seção da disciplina">
           <label><input type="radio" name="disc-aba" value="aulas" checked><span>Aulas</span></label>
           <label><input type="radio" name="disc-aba" value="avaliacoes"><span>Avaliações</span></label>
+          <!-- Só aparece se a disciplina tiver aulas ao vivo -->
+          <label id="aba-aovivo"><input type="radio" name="disc-aba" value="aovivo"><span>Ao vivo</span></label>
         </div>
 
         <!-- Aba Aulas -->
@@ -131,6 +133,16 @@
           <!-- Botões para abrir 2ª chamada, Exame ou Recuperação (aparecem se reprovar) -->
           <div id="chances"></div>
           <p class="rodape">Para passar: média 70.</p>
+        </div>
+
+        <!-- Aba Ao vivo -->
+        <div id="painel-aovivo" hidden>
+          <div class="card">
+            <div id="lista-aovivo"></div>
+            <p id="lista-aovivo-vazia" class="vazio-peq" hidden>Nenhuma aula ao vivo cadastrada.</p>
+            <button id="btn-novo-aovivo" type="button" class="link">+ Adicionar aula ao vivo</button>
+          </div>
+          <p class="rodape">Marque como assistida quando ver ao vivo ou a gravação.</p>
         </div>
 
         <button id="btn-editar-disc" type="button" class="btn btn-secundario">Editar disciplina</button>
@@ -226,6 +238,42 @@
       </section>
 
 
+      <!-- ---------------- AULA AO VIVO (nova / editar) ---------------- -->
+      <section id="tela-aovivo" class="tela" hidden>
+        <form id="form-aovivo" novalidate>
+          <input id="aovivo-id" type="hidden">
+          <p id="aovivo-desc-disc" class="rodape"></p>
+
+          <label for="aovivo-descricao">Descrição (opcional)</label>
+          <input id="aovivo-descricao" type="text" maxlength="200" autocomplete="off"
+                 placeholder="Ex.: Elaboração de um Modelo Entidade-Relacionamento (MER)">
+
+          <div class="duas">
+            <div>
+              <label for="aovivo-data">Data</label>
+              <input id="aovivo-data" type="date">
+            </div>
+            <div>
+              <label for="aovivo-hora">Hora</label>
+              <input id="aovivo-hora" type="text" inputmode="numeric" maxlength="5"
+                     autocomplete="off" placeholder="19:00">
+            </div>
+          </div>
+
+          <label class="check">
+            <input id="aovivo-assistida" type="checkbox">
+            <span>Assistida (ao vivo ou gravação)</span>
+          </label>
+
+          <p id="aovivo-erro" class="erro" hidden></p>
+
+          <button type="submit" class="btn btn-primario">Salvar</button>
+          <button id="btn-excluir-aovivo" type="button" class="btn btn-perigo" hidden>Excluir aula ao vivo</button>
+          <button id="btn-cancelar-aovivo" type="button" class="btn btn-secundario">Cancelar</button>
+        </form>
+      </section>
+
+
       <!-- ---------------- NOVA / EDITAR DISCIPLINA ---------------- -->
       <section id="tela-form-disc" class="tela" hidden>
         <form id="form-disc" novalidate>
@@ -281,6 +329,11 @@
             <span>Tem trabalho para entregar</span>
           </label>
 
+          <label class="check">
+            <input id="disc-f-aovivo" type="checkbox">
+            <span>Tem aulas ao vivo</span>
+          </label>
+
           <p id="disc-f-dica" class="rodape">Ao salvar, o app cria as aulas e as avaliações (APOL 1, APOL 2 e Prova Mista).</p>
           <p id="disc-f-erro" class="erro" hidden></p>
 
@@ -304,6 +357,8 @@
   <div id="modal" class="modal" hidden>
     <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-msg">
       <p id="modal-msg"></p>
+      <!-- Campo de texto: usado só ao editar o nome de um item -->
+      <input id="modal-input" type="text" maxlength="120" autocomplete="off" aria-label="Texto" hidden>
       <div class="modal-botoes">
         <button id="modal-cancelar" type="button" class="btn btn-secundario">Cancelar</button>
         <button id="modal-ok" type="button" class="btn btn-primario">OK</button>
