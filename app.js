@@ -955,6 +955,149 @@ function abrirDisciplinaNaAba(aba, discId) {
 
 
 // ---------------------------------------------------------------------
+// 12.1 AULAS AO VIVO
+// Aba "Ao vivo" da disciplina + tela de cadastro/edição.
+// A caixa marca "assistida"; tocar no texto abre a edição.
+// ---------------------------------------------------------------------
+function renderAoVivo() {
+  const lista = aoVivoDa(estado.discAtual);
+  $('lista-aovivo-vazia').hidden = lista.length > 0;
+
+  $('lista-aovivo').innerHTML = lista.map((v) => {
+    const quando = v.data ? `${dma(v.data)}${v.hora ? ' às ' + hm(v.hora) : ''}` : 'Data não informada';
+    const desc = v.descricao ? ` · ${esc(v.descricao)}` : '';
+    return `
+      <div class="ck" data-aovivo="${v.id}">
+        <input type="checkbox" ${v.assistida ? 'checked' : ''} aria-label="Assistida">
+        <span class="aovivo-tx" data-abrir>
+          <b>Aula ao vivo ${v.numero}${desc}</b>
+          <small>${quando}</small>
+        </span>
+        <button type="button" class="editar" data-abrir aria-label="Editar aula ao vivo">✎</button>
+      </div>`;
+  }).join('');
+}
+
+// Marcar/desmarcar "assistida" direto na lista
+$('lista-aovivo').addEventListener('change', async (e) => {
+  const linha = e.target.closest('[data-aovivo]');
+  if (!linha) return;
+  const v = aoVivoPorId(Number(linha.dataset.aovivo));
+  const novo = e.target.checked;
+
+  const mudanca = { assistida: novo, assistida_em: novo ? new Date().toISOString() : null };
+  const { error } = await sb.from('est_aulas_ao_vivo').update(mudanca).eq('id', v.id);
+  if (error) { e.target.checked = !novo; return falha('atualizar a aula ao vivo', error); }
+
+  Object.assign(v, mudanca);
+  renderAoVivo();
+  aviso(novo ? 'Marcada como assistida ✓' : 'Desmarcada');
+});
+
+// Tocar no texto ou no ✎ abre a edição
+$('lista-aovivo').addEventListener('click', (e) => {
+  if (!e.target.closest('[data-abrir]')) return;
+  const linha = e.target.closest('[data-aovivo]');
+  abrirAoVivo(Number(linha.dataset.aovivo), null, () => abrirDisciplinaNaAba('aovivo', estado.discAtual));
+});
+
+$('btn-novo-aovivo').addEventListener('click', () =>
+  abrirAoVivo(null, estado.discAtual, () => abrirDisciplinaNaAba('aovivo', estado.discAtual)));
+
+// Abre o formulário.
+//   id     -> aula ao vivo existente (editar) ou null (nova)
+//   discId -> disciplina (usado só na nova)
+//   voltar -> função do botão Voltar / Cancelar
+let voltarDoAoVivo = null;
+
+function abrirAoVivo(id, discId, voltar) {
+  const v = id ? aoVivoPorId(id) : null;
+  discId = v ? v.disciplina_id : discId;
+  const d = discPorId(discId);
+  if (!d) return;
+  estado.discAtual = discId;
+  voltarDoAoVivo = voltar;
+
+  // Nova: número = maior número + 1
+  const lista = aoVivoDa(discId);
+  const numero = v ? v.numero : (lista.length ? lista[lista.length - 1].numero + 1 : 1);
+
+  mostrar('aovivo', `Aula ao vivo ${numero}`, voltar);
+  $('aovivo-id').value = v ? v.id : '';
+  $('aovivo-id').dataset.numero = numero;
+  $('aovivo-desc-disc').textContent = d.nome;
+  $('aovivo-descricao').value = v?.descricao || '';
+  $('aovivo-data').value = v?.data || '';
+  $('aovivo-hora').value = hm(v?.hora);
+  $('aovivo-assistida').checked = v ? v.assistida : false;
+  $('btn-excluir-aovivo').hidden = !v;
+  $('aovivo-erro').hidden = true;
+}
+
+// Máscara da hora: digita só números -> "1900" vira "19:00"
+$('aovivo-hora').addEventListener('input', (e) => {
+  const dig = e.target.value.replace(/\D/g, '').slice(0, 4);
+  e.target.value = dig.length > 2 ? `${dig.slice(0, 2)}:${dig.slice(2)}` : dig;
+});
+
+$('form-aovivo').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('aovivo-erro').hidden = true;
+
+  const id = Number($('aovivo-id').value) || null;
+  const hora = $('aovivo-hora').value.trim();
+
+  // Hora vazia é permitida; se preenchida, precisa ser HH:MM válida
+  if (hora) {
+    const [h, m] = hora.split(':').map(Number);
+    if (!/^\d{2}:\d{2}$/.test(hora) || h > 23 || m > 59)
+      return mostrarErro('aovivo-erro', 'Hora inválida. Use o formato 19:00.');
+  }
+
+  const assistida = $('aovivo-assistida').checked;
+  const antes = id ? aoVivoPorId(id) : null;
+
+  const registro = {
+    descricao: $('aovivo-descricao').value.trim() || null,
+    data: $('aovivo-data').value || null,
+    hora: hora || null,
+    assistida,
+    // Só grava a data/hora de "assistida" quando muda de não para sim
+    assistida_em: assistida ? (antes?.assistida_em || new Date().toISOString()) : null,
+  };
+
+  const botao = e.submitter;
+  botao.disabled = true;
+  const { error } = id
+    ? await sb.from('est_aulas_ao_vivo').update(registro).eq('id', id)
+    : await sb.from('est_aulas_ao_vivo').insert({
+        ...registro, disciplina_id: estado.discAtual, numero: Number($('aovivo-id').dataset.numero),
+      });
+  botao.disabled = false;
+  if (error) return falha('salvar a aula ao vivo', error);
+
+  await carregarTudo();
+  aviso('Salvo!');
+  voltarDoAoVivo?.();
+});
+
+$('btn-excluir-aovivo').addEventListener('click', async () => {
+  const v = aoVivoPorId(Number($('aovivo-id').value));
+  const ok = await confirmar(`Excluir a Aula ao vivo ${v.numero}?`, { ok: 'Excluir', perigo: true });
+  if (!ok) return;
+
+  const { error } = await sb.from('est_aulas_ao_vivo').delete().eq('id', v.id);
+  if (error) return falha('excluir a aula ao vivo', error);
+
+  await carregarTudo();
+  aviso('Excluída');
+  voltarDoAoVivo?.();
+});
+
+$('btn-cancelar-aovivo').addEventListener('click', () => voltarDoAoVivo?.());
+
+
+// ---------------------------------------------------------------------
 // 13. FORMULÁRIO DE DISCIPLINA (nova e editar)
 // ---------------------------------------------------------------------
 function abrirFormDisc(discId) {
@@ -972,6 +1115,7 @@ function abrirFormDisc(discId) {
     $('disc-f-inicio').value = d.data_inicio || '';
     $('disc-f-fim').value = d.data_fim || '';
     $('disc-f-trabalho').checked = d.tem_trabalho;
+    $('disc-f-aovivo').checked = d.tem_ao_vivo;
   } else {
     mostrar('form-disc', 'Nova disciplina', null, 'form-disc');
     // Sugere módulo, fase, ano e datas da disciplina mais recente
@@ -987,6 +1131,7 @@ function abrirFormDisc(discId) {
     $('disc-f-inicio').value = ultima?.data_inicio || '';
     $('disc-f-fim').value = ultima?.data_fim || '';
     $('disc-f-trabalho').checked = false;
+    $('disc-f-aovivo').checked = false;
   }
 
   // Nº de aulas só no cadastro (depois, usa "+ Adicionar aula")
@@ -1020,6 +1165,8 @@ $('form-disc').addEventListener('submit', async (e) => {
     data_inicio: inicio,
     data_fim: fim,
     tem_trabalho: $('disc-f-trabalho').checked,
+    // Desmarcar só esconde a aba "Ao vivo"; as aulas ao vivo já cadastradas são mantidas
+    tem_ao_vivo: $('disc-f-aovivo').checked,
   };
 
   const botao = e.submitter;
