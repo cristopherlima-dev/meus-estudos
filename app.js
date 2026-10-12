@@ -1248,7 +1248,7 @@ async function iniciar() {
 
 iniciar();
 
-// Service worker (arquivo sw.js vem numa próxima etapa; até lá, só ignora o erro)
+// Service worker: permite instalar o app e abrir sem internet (ver sw.js)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
